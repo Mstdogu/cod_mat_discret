@@ -124,10 +124,15 @@ void inMatrAdj() {
     }
 }
 
-/* 3) matrice incidenta (accepta 0/1 cu doua 1 pe coloana; accepta si -1/+1) */
+/* 3) matrice incidenta
+   Accepta:
+   - 0/1 (doua de 1 pe coloana) -> arc intre cele doua varfuri
+   - -1/+1 (start=-1, end=+1)   -> arc orientat start->end
+   - 2 (o singura valoare 2 pe coloana) -> bucla la varful respectiv
+*/
 void inMatrInc() {
     int nn, m, i, col, x;
-    int u, v, start, end;
+    int u, v, start, end, loop;
 
     printf("n (varfuri) = "); scanf("%d", &nn);
     printf("m (arce/muchii) = "); scanf("%d", &m);
@@ -135,26 +140,31 @@ void inMatrInc() {
     makeGraf(nn);
 
     printf("Introdu matricea B (%d x %d).\n", n, m);
-    printf("Accept: 0/1 (doua de 1 pe coloana) sau -1/+1 (start=-1, end=+1)\n");
+    printf("Accept: 0/1 sau -1/+1 sau 2 pentru bucla\n");
 
     for (col = 1; col <= m; col++) {
         u = 0; v = 0;
         start = 0; end = 0;
+        loop = 0;
 
         for (i = 1; i <= n; i++) {
             scanf("%d", &x);
 
-            if (x == -1) start = i;
+            if (x == 2) loop = i;      /* bucla */
+
+            if (x == -1) start = i;    /* start (varianta -1/+1) */
 
             if (x == 1) {
                 if (u == 0) u = i;
                 else v = i;
-                end = i;
+                end = i;               /* end (varianta -1/+1) */
             }
         }
 
-        if (start != 0 && end != 0) addEdge(start, end);   /* varianta -1/+1 */
-        else if (u != 0 && v != 0) addEdge(u, v);          /* varianta 0/1 */
+        if (loop != 0) addEdge(loop, loop);                 /* bucla */
+        else if (start != 0 && end != 0) addEdge(start, end); /* -1/+1 */
+        else if (u != 0 && v != 0) addEdge(u, v);            /* 0/1 normal */
+        else if (u != 0 && v == 0) addEdge(u, u);            /* un singur 1 -> bucla */
         else printf("Coloana %d invalida (ignorata)\n", col);
     }
 }
@@ -191,7 +201,10 @@ void showMatrAdj() {
     }
 }
 
-/* matrice incidenta 0/1: o coloana pentru fiecare arc (u->v): 1 la u si 1 la v */
+/* matrice incidenta:
+   - pentru arc u->v: 1 la u si 1 la v
+   - pentru bucla u->u: 2 la u
+*/
 void showMatrInc() {
     int i, u, v, k, m = 0, idx;
 
@@ -216,7 +229,9 @@ void showMatrInc() {
 
     for (i = 1; i <= n; i++) {
         for (idx = 1; idx <= m; idx++) {
-            int val = (i == U[idx] || i == V[idx]) ? 1 : 0;
+            int val = 0;
+            if (U[idx] == V[idx] && i == U[idx]) val = 2;      /* bucla */
+            else if (i == U[idx] || i == V[idx]) val = 1;      /* arc normal */
             printf("%d ", val);
         }
         printf("\n");
@@ -329,21 +344,12 @@ void modificare_graf() {
     else if (o == 4) delArcMenu();
 }
 
-/* ================== CONVERSIE ==================
-   conversie = obtinerea formei cerute; aici doar afisam forma aleasa
-*/
+/* ================== CONVERSIE ================== */
 void conversie_graf() {
     afisare_graf();
 }
 
-/* ================== FISIER ==================
-   salveaza si citeste lista adiacenta (varfuri de la 1)
-   format:
-   n
-   1: 2 3
-   2: 3
-   3:
-*/
+/* ================== FISIER ================== */
 
 void saveFile() {
     char name[100];
@@ -431,4 +437,3 @@ int main() {
     clearGraf();
     return 0;
 }
- 
